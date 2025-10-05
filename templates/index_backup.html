@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 Space Exploration & Defense Platform | NASA Challenge Solution</title>
+    
+    <!-- Light Theme CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme-light.css') }}">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Light Theme CSS Variables -->
+    <style>
+        :root {
+            /* Light Theme Colors */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: #F8F9FA;
+            --bg-tertiary: #E9ECEF;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #6C757D;
+            --accent: #0066CC;
+            --accent-hover: #0052A3;
+            --success: #28A745;
+            --danger: #DC3545;
+            --warning: #FFC107;
+            --border-light: #DEE2E6;
+            --border-medium: #CED4DA;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .logo h1 {
+            background: linear-gradient(45deg, var(--accent), var(--success));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 0.75rem 1.25rem;
+            background: var(--bg-primary);
+            border: 2px solid var(--border-medium);
+            color: var(--text-primary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        
+        .nav-tab:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        
+        .nav-tab.active {
+            background: var(--accent);
+            color: #FFFFFF;
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .main-container {
+            margin-top: 90px;
+            min-height: calc(100vh - 90px);
+            padding: 2rem;
+            max-width: 1600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .sidebar {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+        
+        .content-area {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+        }
+        
+        .visualization-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            min-height: 600px;
+            background: var(--bg-primary);
+        }
+        
+        .control-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 8px;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-md);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .info-card {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .info-card h3 {
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .metric-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            color: var(--accent);
+            font-weight: 700;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .status-online { background: var(--success); }
+        .status-warning { background: var(--warning); }
+        .status-offline { background: var(--danger); }
+        
+        .hidden { display: none; }
+        
+        .view-section {
+            display: none;
+        }
+        
+        .view-section.active {
+            display: block;
+        }
+        
+        .real-time-feed {
+            max-height: 400px;
+            overflow-y: auto;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--border-light);
+        }
+        
+        .feed-item {
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent);
+        }
+        
+        .feed-time {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .missions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding: 1rem 0;
+        }
+        
+        .mission-card {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s;
+        }
+        
+        .mission-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent);
+        }
+        
+        .mission-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        
+        .btn, button {
+            padding: 0.75rem 1.5rem;
+            background: var(--accent);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn:hover, button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-medium);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: #FFFFFF;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: #FFFFFF;
+        }
+        
+        .status-active {
+            background: var(--success);
+            color: #FFFFFF;
+        }
+        
+        .status-planned {
+            background: var(--accent);
+            color: #FFFFFF;
+        }
+        
+        .status-completed {
+            background: var(--text-muted);
+            color: #FFFFFF;
+        }
+        
+        select, input[type="range"], input[type="text"], input[type="number"] {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-medium);
+            color: var(--text-primary);
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+        
+        label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        
+        #apod-container img {
+            width: 100%;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .apod-title {
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 0.25rem;
+        }
+        
+        .apod-description {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+            
+            .sidebar {
+                order: 1;
+                padding: 1rem;
+                max-height: none;
+            }
+            
+            .content-area {
+                order: 2;
+                min-height: 400px;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+            }
+            
+            .nav-tab {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+            }
+            
+            .control-panel {
+                position: relative;
+                bottom: auto;
+                left: auto;
+                right: auto;
+                margin: 1rem;
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <h1>🌌 Space Explorer Pro</h1>
+            <p style="font-size: 0.9rem; margin: 0;">NASA-Powered Comprehensive Space Platform</p>
+        </div>
+        
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-view="stellarium">🌟 Sky View</button>
+            <button class="nav-tab" data-view="iss">🛰️ ISS Live</button>
+            <button class="nav-tab" data-view="solar-system">🌍 Solar System</button>
+            <button class="nav-tab" data-view="asteroids">☄️ Asteroids</button>
+            <button class="nav-tab" data-view="missions">🚀 Missions</button>
+            <button class="nav-tab" data-view="live">📡 Live Feed</button>
+        </nav>
+        
+        <div class="status">
+            <span class="status-indicator status-online"></span>
+            <span>NASA API Connected</span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <div class="info-card">
+                <h3>🕒 Current Time</h3>
+                <div id="current-time">Loading...</div>
+            </div>
+            
+            <div class="info-card">
+                <h3>📍 Observer Location</h3>
+                <div class="metric">
+                    <span>Latitude:</span>
+                    <span class="metric-value" id="obs-lat">0°</span>
+                </div>
+                <div class="metric">
+                    <span>Longitude:</span>
+                    <span class="metric-value" id="obs-lon">0°</span>
+                </div>
+                <button class="btn btn-primary" onclick="getLocation()">📍 Use My Location</button>
+            </div>
+            
+            <div class="info-card">
+                <h3>🌙 Moon Info</h3>
+                <div id="moon-info">
+                    <div class="metric">
+                        <span>Phase:</span>
+                        <span class="metric-value" id="moon-phase">Loading...</span>
+                    </div>
+                    <div class="metric">
+                        <span>Illumination:</span>
+                        <span class="metric-value" id="moon-illumination">---%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3>🌅 Sun/Moon Times</h3>
+                <div class="metric">
+                    <span>Sunrise:</span>
+                    <span class="metric-value" id="sunrise">--:--</span>
+                </div>
+                <div class="metric">
+                    <span>Sunset:</span>
+                    <span class="metric-value" id="sunset">--:--</span>
+                </div>
+                <div class="metric">
+                    <span>Moon Rise:</span>
+                    <span class="metric-value" id="moonrise">--:--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Central Content Area -->
+        <div class="content-area">
+            <!-- Stellarium Sky View -->
+            <div id="stellarium-view" class="view-section active">
+                <div class="visualization-container">
+                    <div id="sky-canvas" style="width: 100%; height: 100%; background: linear-gradient(to bottom, #000011, #000033);"></div>
+                    <div class="control-panel">
+                        <div>
+                            <label>Time Speed:</label>
+                            <input type="range" id="time-speed" min="0" max="10" value="1">
+                            <span id="speed-display">1x</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="resetTime()">Now</button>
+                            <button class="btn btn-primary" onclick="togglePlanets()">Planets</button>
+                            <button class="btn btn-primary" onclick="toggleSatellites()">Satellites</button>
+                            <button class="btn btn-primary" onclick="toggleConstellations()">Constellations</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ISS Tracker -->
+            <div id="iss-view" class="view-section">
+                <div class="visualization-container">
+                    <div id="iss-map" style="width: 100%; height: 100%;"></div>
+                    <div class="control-panel">
+                        <div id="iss-info">
+                            <span>ISS Location: <span id="iss-coordinates">Loading...</span></span>
+                            <span>Altitude: <span id="iss-altitude">--- km</span></span>
+                            <span>Speed: <span id="iss-speed">--- km/h</span></span>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="centerOnISS()">🎯 Center on ISS</button>
+                            <button class="btn btn-primary" onclick="showISSPasses()">📅 View Passes</button>
+                            <button class="btn btn-primary" onclick="trackISS()">📡 Start Tracking</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Solar System with Accurate Physics -->
+            <div id="solar-system-view" class="view-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">🪐 Solar System - Accurate Orbital Mechanics</h2>
+                        <div class="badge badge-success">Real Physics</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="viz-controls">
+                            <div class="input-group" style="display: inline-block; margin-right: 1rem;">
+                                <label class="input-label" style="display: inline; margin-right: 0.5rem;">Planet:</label>
+                                <select id="planet-select" class="select-field" style="width: auto; display: inline-block;" onchange="focusOnPlanet()">
+                                    <option value="">All Planets</option>
+                                    <option value="mercury">☿ Mercury</option>
+                                    <option value="venus">♀ Venus</option>
+                                    <option value="earth">🌍 Earth</option>
+                                    <option value="mars">♂ Mars</option>
+                                    <option value="jupiter">♃ Jupiter</option>
+                                    <option value="saturn">♄ Saturn</option>
+                                    <option value="uranus">♅ Uranus</option>
+                                    <option value="neptune">♆ Neptune</option>
+                                </select>
+                            </div>
+                            <div class="input-group" style="display: inline-block; margin-right: 1rem;">
+                                <label class="input-label" style="display: inline; margin-right: 0.5rem;">Time Speed:</label>
+                                <select id="time-scale" class="select-field" style="width: auto; display: inline-block;" onchange="setTimeScale()">
+                                    <option value="0.1">0.1x (Slow)</option>
+                                    <option value="1" selected>1x (Real-time)</option>
+                                    <option value="10">10x (Fast)</option>
+                                    <option value="100">100x (Very Fast)</option>
+                                    <option value="365">365x (Year/Day)</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="resetCamera()">🔄 Reset View</button>
+                            <button class="btn btn-secondary" onclick="toggleSolarSystemInfo()">ℹ️ Info</button>
+                        </div>
+                        <div id="solar-system-3d" class="viz-container" style="height: 700px; background: #FFFFFF;"></div>
+                        <div id="solar-system-info" class="alert alert-info" style="display: none; margin-top: 1rem;">
+                            <h4>🔬 Accurate Orbital Physics</h4>
+                            <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                                <li><strong>Elliptical Orbits:</strong> Using real eccentricity values</li>
+                                <li><strong>Orbital Inclination:</strong> Accurate axial tilts</li>
+                                <li><strong>Keplerian Motion:</strong> True orbital mechanics</li>
+                                <li><strong>Relative Scales:</strong> Logarithmic sizing for visibility</li>
+                                <li><strong>Rotation Periods:</strong> Accurate planetary rotations</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Asteroids -->
+            <div id="asteroids-view" class="view-section">
+                <div class="visualization-container">
+                    <div id="asteroids-canvas" style="width: 100%; height: 100%; background: #000011;"></div>
+                    <div class="control-panel">
+                        <div>
+                            <label>Threat Level:</label>
+                            <select id="threat-filter">
+                                <option value="all">All Objects</option>
+                                <option value="high">🚨 High Risk</option>
+                                <option value="medium">⚠️ Medium Risk</option>
+                                <option value="low">✅ Low Risk</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary" onclick="refreshAsteroids()">🔄 Refresh</button>
+                            <button class="btn btn-primary" onclick="simulateImpact()">💥 Impact Sim</button>
+                            <button class="btn btn-primary" onclick="defendEarth()">🛡️ Defense</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Missions -->
+            <div id="missions-view" class="view-section">
+                <div class="visualization-container" style="overflow-y: auto; padding: 2rem;">
+                    <h2 style="color: var(--accent); margin-bottom: 1rem;">🚀 Active Space Missions</h2>
+                    <div id="missions-content" class="missions-grid">
+                        <!-- Mission cards will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Feed -->
+            <div id="live-view" class="view-section">
+                <div class="visualization-container" style="padding: 2rem;">
+                    <h2 style="color: var(--accent); margin-bottom: 1rem;">📡 Real-Time Space Events</h2>
+                    <div class="real-time-feed" id="live-feed">
+                        <div class="feed-item">
+                            <div class="feed-time">Initializing live feed...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <div class="sidebar">
+            <div class="info-card">
+                <h3>🛰️ Satellites Overhead</h3>
+                <div id="satellite-list">
+                    <div class="metric">
+                        <span>ISS:</span>
+                        <span class="metric-value" id="iss-visibility">Checking...</span>
+                    </div>
+                    <div class="metric">
+                        <span>Starlink:</span>
+                        <span class="metric-value" id="starlink-count">---</span>
+                    </div>
+                    <div class="metric">
+                        <span>Hubble:</span>
+                        <span class="metric-value" id="hubble-visibility">---</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3>🌟 Visible Tonight</h3>
+                <div id="visible-objects">
+                    <div class="metric">
+                        <span>Planets:</span>
+                        <span class="metric-value" id="visible-planets">Loading...</span>
+                    </div>
+                    <div class="metric">
+                        <span>ISS Passes:</span>
+                        <span class="metric-value" id="iss-passes">---</span>
+                    </div>
+                    <div class="metric">
+                        <span>Meteors:</span>
+                        <span class="metric-value" id="meteor-showers">---</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3>📸 NASA Image of the Day</h3>
+                <div id="apod-container">Loading amazing space imagery...</div>
+            </div>
+            
+            <div class="info-card">
+                <h3>🚨 Space Weather</h3>
+                <div id="space-weather">
+                    <div class="metric">
+                        <span>Solar Activity:</span>
+                        <span class="metric-value" id="solar-activity">Normal</span>
+                    </div>
+                    <div class="metric">
+                        <span>Geomagnetic:</span>
+                        <span class="metric-value" id="geomagnetic">Quiet</span>
+                    </div>
+                    <div class="metric">
+                        <span>Aurora Alert:</span>
+                        <span class="metric-value" id="aurora-alert">None</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3>👨‍🚀 People in Space</h3>
+                <div id="people-in-space">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/solar_system_3d.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stellarium.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/iss-tracker.js') }}"></script>
+    <script>
+        // Initialize the application with accurate solar system physics
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Initializing Space Explorer with accurate physics...');
+            initializeApp();
+            
+            // Initialize accurate solar system if on that tab
+            if (document.getElementById('solar-system-3d')) {
+                window.solarSystem3D = new SolarSystem3D('solar-system-3d');
+                console.log('✅ Solar System 3D initialized with accurate orbital mechanics');
+            }
+        });
+    </script>
+</body>
+</html>

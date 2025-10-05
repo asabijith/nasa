@@ -1,0 +1,683 @@
+<!DOCTY    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js" onload="console.log('✅ Three.js loaded')" onerror="console.error('❌ Three.js failed to load')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/OrbitControls.js" onload="console.log('✅ OrbitControls loaded')" onerror="console.warn('⚠️ OrbitControls failed to load')"></script>
+    
+    <!-- Alternative Three.js sources -->
+    <script>
+        // Three.js library checker and alternative loader
+        setTimeout(() => {
+            if (typeof THREE === 'undefined') {
+                console.warn('Primary Three.js CDN failed, trying alternatives...');
+                
+                // Try alternative CDNs
+                const alternatives = [
+                    'https://threejs.org/build/three.min.js',
+                    'https://unpkg.com/three@0.155.0/build/three.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/three.js/r155/three.min.js'
+                ];
+                
+                let currentIndex = 0;
+                
+                function loadAlternative() {
+                    if (currentIndex >= alternatives.length) {
+                        console.error('❌ All Three.js CDNs failed');
+                        return;
+                    }
+                    
+                    const script = document.createElement('script');
+                    script.src = alternatives[currentIndex];
+                    script.onload = () => {
+                        console.log(`✅ Three.js loaded from alternative source: ${alternatives[currentIndex]}`);
+                        // Load OrbitControls
+                        const controlsScript = document.createElement('script');
+                        controlsScript.src = 'https://threejs.org/examples/js/controls/OrbitControls.js';
+                        document.head.appendChild(controlsScript);
+                    };
+                    script.onerror = () => {
+                        currentIndex++;
+                        loadAlternative();
+                    };
+                    document.head.appendChild(script);
+                }
+                
+                loadAlternative();
+            } else {
+                console.log('✅ Three.js successfully loaded');
+            }
+        }, 1000);
+    </script>ml lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>☄️ Meteor Madness - Defend Earth from Asteroids | NASA Challenge</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Backup Three.js and OrbitControls -->
+    <script>
+        // Fallback Three.js loader with better error handling
+        if (typeof THREE === 'undefined') {
+            console.warn('Three.js not loaded from CDN, loading backup...');
+            document.write('<script src="https://threejs.org/build/three.min.js"><\/script>');
+            document.write('<script src="https://threejs.org/examples/js/controls/OrbitControls.js"><\/script>');
+        }
+    </script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- TailwindCSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --space-dark: #0a0e27;
+            --space-blue: #1a1d3a;
+            --space-light: #2a2d4a;
+            --neon-cyan: #00d4ff;
+            --neon-green: #00ff88;
+            --danger-red: #ff4466;
+            --warning-orange: #ffaa00;
+            --text-light: #e0e0e0;
+            --text-muted: #a0a0a0;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--space-dark) 0%, var(--space-blue) 50%, var(--space-dark) 100%);
+            color: var(--text-light);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        .hero-section {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5)), 
+                        url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><rect fill="%23000011" width="1000" height="1000"/><g fill="%23ffffff" opacity="0.1"><circle cx="200" cy="200" r="2"/><circle cx="400" cy="150" r="1"/><circle cx="600" cy="250" r="1.5"/><circle cx="800" cy="100" r="1"/><circle cx="150" cy="400" r="1"/><circle cx="350" cy="450" r="2"/><circle cx="550" cy="350" r="1"/><circle cx="750" cy="400" r="1.5"/><circle cx="100" cy="600" r="1"/><circle cx="300" cy="650" r="1"/><circle cx="500" cy="600" r="2"/><circle cx="700" cy="550" r="1"/><circle cx="900" cy="600" r="1.5"/><circle cx="250" cy="800" r="1"/><circle cx="450" cy="750" r="1"/><circle cx="650" cy="850" r="2"/><circle cx="850" cy="800" r="1"/></g></svg>');
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        /* Impact Zone Styling */
+        .impact-marker {
+            font-size: 24px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: pulse 2s infinite;
+        }
+        
+        .damage-zone-popup {
+            font-family: inherit;
+            min-width: 200px;
+        }
+        
+        .damage-zone-popup h4 {
+            margin: 0;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .custom-div-icon {
+            background: none !important;
+            border: none !important;
+        }
+        
+        /* Impact map styling */
+        #impact-map {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(4px);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .card {
+            background: rgba(26, 26, 46, 0.9);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-green));
+            color: var(--space-dark);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 212, 255, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 212, 255, 0.6);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-red), #ff6b6b);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-orange), #ffd93d);
+            color: var(--space-dark);
+        }
+        
+        .simulation-panel {
+            background: rgba(42, 45, 74, 0.95);
+            border-radius: 0.75rem;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .control-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(0, 212, 255, 0.3);
+            outline: none;
+        }
+        
+        .control-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--neon-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .impact-visualization {
+            border-radius: 0.5rem;
+            border: 2px solid var(--neon-cyan);
+            background: #000011;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(0, 255, 136, 0.1));
+            border: 1px solid var(--neon-cyan);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+        }
+        
+        .danger-zone {
+            background: linear-gradient(135deg, rgba(255, 68, 102, 0.2), rgba(255, 170, 0, 0.2));
+            border: 2px solid var(--danger-red);
+        }
+        
+        .safe-zone {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 212, 255, 0.2));
+            border: 2px solid var(--neon-green);
+        }
+        
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px var(--neon-cyan); }
+            50% { box-shadow: 0 0 20px var(--neon-cyan), 0 0 30px var(--neon-cyan); }
+            100% { box-shadow: 0 0 5px var(--neon-cyan); }
+        }
+        
+        .pulse-glow {
+            animation: pulse-glow 2s infinite;
+        }
+        
+        @keyframes meteor-fall {
+            0% { transform: translateY(-100px) rotate(-45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100vh) rotate(-45deg); opacity: 0; }
+        }
+        
+        .meteor {
+            position: fixed;
+            width: 4px;
+            height: 4px;
+            background: var(--warning-orange);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--warning-orange);
+            animation: meteor-fall 3s infinite linear;
+        }
+        
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+        
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            white-space: nowrap;
+            z-index: 1000;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Animated Background Elements -->
+    <div id="background-meteors"></div>
+    
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-50 backdrop-blur-lg border-b border-cyan-400">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-green-400">
+                        ☄️ Meteor Madness
+                    </h1>
+                    <span class="text-sm text-gray-400">Defend Earth from Asteroids</span>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="/" class="text-cyan-400 hover:text-cyan-300 transition-colors">🏠 Home</a>
+                    <button id="help-btn" class="text-cyan-400 hover:text-cyan-300 transition-colors">❓ Help</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section pt-20" id="hero">
+        <div class="container mx-auto px-6 text-center">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-6xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500">
+                    DEFEND EARTH
+                </h2>
+                <p class="text-2xl mb-4 text-gray-300">
+                    Interactive Asteroid Impact Simulation & Mitigation Tool
+                </p>
+                <p class="text-lg mb-8 text-gray-400 max-w-2xl mx-auto">
+                    Explore asteroid impact scenarios using real NASA NEO data. Calculate impact energies, 
+                    visualize damage zones, and test deflection strategies to protect our planet.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card p-6">
+                        <div class="text-4xl mb-4">🌍</div>
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">Real Data</h3>
+                        <p class="text-gray-400">NASA NEO API & USGS datasets for accurate simulations</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="text-4xl mb-4">🎮</div>
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">Interactive</h3>
+                        <p class="text-gray-400">Gamified deflection scenarios with real-time feedback</p>
+                    </div>
+                    <div class="card p-6">
+                        <div class="text-4xl mb-4">🛡️</div>
+                        <h3 class="text-xl font-bold mb-2 text-cyan-400">Mitigation</h3>
+                        <p class="text-gray-400">Test kinetic impactors, gravity tractors & laser ablation</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="start-simulation" class="btn-primary px-8 py-4 rounded-lg text-lg font-bold transition-all">
+                        🚀 Start Simulation
+                    </button>
+                    <button id="load-impactor2025" class="btn-warning px-8 py-4 rounded-lg text-lg font-bold transition-all">
+                        ⚡ Load Impactor-2025
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simulation Dashboard -->
+    <section id="simulation-dashboard" class="min-h-screen py-12 hidden">
+        <div class="container mx-auto px-6">
+            <div class="mb-8 text-center">
+                <h2 class="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-green-400">
+                    Asteroid Impact Simulator
+                </h2>
+                <p class="text-gray-400">Adjust parameters and visualize the consequences</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Control Panel -->
+                <div class="lg:col-span-1">
+                    <div class="card p-6 mb-6">
+                        <h3 class="text-2xl font-bold mb-4 text-cyan-400">🎛️ Asteroid Parameters</h3>
+                        
+                        <!-- Size Control -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2 tooltip" data-tooltip="Diameter of the asteroid in meters">
+                                Diameter: <span id="size-value" class="text-cyan-400 font-bold">100m</span>
+                            </label>
+                            <input type="range" id="size-slider" min="10" max="2000" value="100" class="control-slider w-full">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>10m</span>
+                                <span>2km</span>
+                            </div>
+                        </div>
+
+                        <!-- Velocity Control -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2 tooltip" data-tooltip="Impact velocity in kilometers per second">
+                                Velocity: <span id="velocity-value" class="text-cyan-400 font-bold">20 km/s</span>
+                            </label>
+                            <input type="range" id="velocity-slider" min="5" max="70" value="20" class="control-slider w-full">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>5 km/s</span>
+                                <span>70 km/s</span>
+                            </div>
+                        </div>
+
+                        <!-- Density Control -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2 tooltip" data-tooltip="Material density in kg/m³">
+                                Density: <span id="density-value" class="text-cyan-400 font-bold">3000 kg/m³</span>
+                            </label>
+                            <input type="range" id="density-slider" min="1000" max="8000" value="3000" step="100" class="control-slider w-full">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>1000</span>
+                                <span>8000</span>
+                            </div>
+                        </div>
+
+                        <!-- Entry Angle -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2 tooltip" data-tooltip="Impact angle from horizontal">
+                                Entry Angle: <span id="angle-value" class="text-cyan-400 font-bold">45°</span>
+                            </label>
+                            <input type="range" id="angle-slider" min="15" max="90" value="45" class="control-slider w-full">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>15°</span>
+                                <span>90°</span>
+                            </div>
+                        </div>
+
+                        <!-- Impact Location -->
+                        <div class="mb-6">
+                            <label class="block text-sm font-medium mb-2">Impact Location</label>
+                            <select id="impact-location" class="w-full p-3 bg-gray-800 border border-cyan-400 rounded-lg text-white">
+                                <option value="ocean">🌊 Ocean (Average Depth)</option>
+                                <option value="land">🏔️ Continental Land</option>
+                                <option value="city">🏙️ Major City</option>
+                                <option value="coast">🏖️ Coastal Area</option>
+                            </select>
+                        </div>
+
+                        <button id="calculate-impact" class="btn-primary w-full py-3 rounded-lg font-bold">
+                            💥 Calculate Impact
+                        </button>
+                    </div>
+
+                    <!-- Deflection Controls -->
+                    <div class="card p-6">
+                        <h3 class="text-2xl font-bold mb-4 text-green-400">🛡️ Deflection Strategy</h3>
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">Mitigation Method</label>
+                            <select id="deflection-method" class="w-full p-3 bg-gray-800 border border-green-400 rounded-lg text-white">
+                                <option value="none">❌ No Deflection</option>
+                                <option value="kinetic">🚀 Kinetic Impactor</option>
+                                <option value="gravity">⭐ Gravity Tractor</option>
+                                <option value="laser">🔴 Laser Ablation</option>
+                                <option value="nuclear">☢️ Nuclear Deflection</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium mb-2">
+                                Warning Time: <span id="warning-time-value" class="text-green-400 font-bold">5 years</span>
+                            </label>
+                            <input type="range" id="warning-time" min="0.5" max="20" value="5" step="0.5" class="control-slider w-full">
+                        </div>
+
+                        <button id="simulate-deflection" class="btn-primary w-full py-3 rounded-lg font-bold">
+                            🎯 Simulate Deflection
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Visualization Area -->
+                <div class="lg:col-span-2">
+                    <!-- 3D Orbit Visualization -->
+                    <div class="card p-6 mb-6">
+                        <h3 class="text-xl font-bold mb-4 text-cyan-400">🌌 3D Orbital Trajectory</h3>
+                        <div id="orbit-visualization" class="impact-visualization" style="height: 400px;"></div>
+                        <div class="mt-4 flex justify-center space-x-2 flex-wrap gap-2">
+                            <button id="reset-view" class="btn-primary px-3 py-2 rounded text-sm">🔄 Reset View</button>
+                            <button id="play-animation" class="btn-primary px-3 py-2 rounded text-sm">▶️ Play</button>
+                            <button id="pause-animation" class="btn-primary px-3 py-2 rounded text-sm hidden">⏸️ Pause</button>
+                            <button id="init-3d-manual" class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded text-sm">🚀 Init 3D</button>
+                            <button id="3d-diagnostics" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-2 rounded text-sm">🔧 Diagnostics</button>
+                        </div>
+                        
+                        <!-- 3D Status Panel -->
+                        <div id="3d-status" class="mt-2 text-xs text-gray-400 text-center">
+                            <span id="3d-status-text">Initializing 3D visualization...</span>
+                        </div>
+                    </div>
+
+                    <!-- Impact Map -->
+                    <div class="card p-6">
+                        <h3 class="text-xl font-bold mb-4 text-cyan-400">🗺️ Impact Zone Analysis</h3>
+                        <div id="impact-map" class="impact-visualization" style="height: 350px;"></div>
+                        <div class="mt-4 grid grid-cols-2 gap-4 text-sm">
+                            <div class="text-center">
+                                <div class="text-red-400 font-bold">🔥 Fireball Radius</div>
+                                <div id="fireball-radius">-</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-orange-400 font-bold">💨 Blast Radius</div>
+                                <div id="blast-radius">-</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Impact Map Controls -->
+                        <div class="mt-3 flex justify-center space-x-2 flex-wrap gap-1">
+                            <button id="init-map-manual" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs">🗺️ Init Map</button>
+                            <button id="map-diagnostics" class="bg-yellow-600 hover:bg-yellow-700 px-3 py-1 rounded text-xs">🔧 Map Status</button>
+                            <button id="refresh-zones" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs">🔄 Refresh Zones</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Panel -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+                <div class="stats-card text-center">
+                    <h4 class="text-lg font-bold text-cyan-400 mb-2">⚡ Kinetic Energy</h4>
+                    <div id="kinetic-energy" class="text-2xl font-bold">-</div>
+                    <div id="tnt-equivalent" class="text-sm text-gray-400">-</div>
+                </div>
+                <div class="stats-card text-center">
+                    <h4 class="text-lg font-bold text-cyan-400 mb-2">🕳️ Crater Size</h4>
+                    <div id="crater-diameter" class="text-2xl font-bold">-</div>
+                    <div id="crater-depth" class="text-sm text-gray-400">-</div>
+                </div>
+                <div class="stats-card text-center">
+                    <h4 class="text-lg font-bold text-cyan-400 mb-2">📊 Seismic Magnitude</h4>
+                    <div id="seismic-magnitude" class="text-2xl font-bold">-</div>
+                    <div id="seismic-range" class="text-sm text-gray-400">-</div>
+                </div>
+                <div class="stats-card text-center">
+                    <h4 class="text-lg font-bold text-cyan-400 mb-2">🌊 Tsunami Risk</h4>
+                    <div id="tsunami-risk" class="text-2xl font-bold">-</div>
+                    <div id="tsunami-height" class="text-sm text-gray-400">-</div>
+                </div>
+            </div>
+
+            <!-- Enhanced NASA Integration Panels -->
+            <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Real-Time Tracking -->
+                <div id="impactor-tracking" class="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+                    <h3 class="text-red-400 font-bold text-lg mb-2">🎯 Impactor Tracking</h3>
+                    <p class="text-gray-400 text-sm">Load Impactor-2025 scenario for real-time tracking data</p>
+                </div>
+                
+                <!-- Space Surveillance -->
+                <div id="space-surveillance" class="bg-blue-900/20 border border-blue-500/30 rounded-lg p-4">
+                    <h3 class="text-blue-400 font-bold text-lg mb-2">🛰️ Space Surveillance</h3>
+                    <p class="text-gray-400 text-sm">NEOSSAT and partner agency data</p>
+                </div>
+                
+                <!-- Seismic Reference -->
+                <div id="seismic-reference" class="bg-orange-900/20 border border-orange-500/30 rounded-lg p-4">
+                    <h3 class="text-orange-400 font-bold text-lg mb-2">🌍 Seismic Reference</h3>
+                    <p class="text-gray-400 text-sm">Historical earthquake comparisons</p>
+                </div>
+            </div>
+
+            <!-- Enhanced NASA Control Panel -->
+            <div class="mt-6 bg-gradient-to-r from-purple-900/20 to-indigo-900/20 border border-purple-500/30 rounded-lg p-6">
+                <h3 class="text-purple-400 font-bold text-xl mb-4">🚀 Enhanced NASA Integration</h3>
+                
+                <!-- Loading Indicator -->
+                <div id="loading-indicator" class="hidden mb-4 p-3 bg-blue-900/30 rounded-lg border border-blue-500/30"></div>
+                
+                <!-- NASA Data Controls -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <button id="load-real-time-data" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 px-4 py-3 rounded-lg font-medium transition-all">
+                        📡 Load Real-Time Data
+                    </button>
+                    
+                    <button id="search-asteroid-db" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 px-4 py-3 rounded-lg font-medium transition-all">
+                        🔍 Search Asteroid DB
+                    </button>
+                    
+                    <button id="view-comets" class="bg-gradient-to-r from-yellow-600 to-yellow-700 hover:from-yellow-500 hover:to-yellow-600 px-4 py-3 rounded-lg font-medium transition-all">
+                        ☄️ Near-Earth Comets
+                    </button>
+                    
+                    <button id="earthquake-data" class="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 px-4 py-3 rounded-lg font-medium transition-all">
+                        🌍 USGS Earthquake Data
+                    </button>
+                </div>
+                
+                <!-- Asteroid Search -->
+                <div class="mb-4 flex space-x-2">
+                    <input type="text" id="asteroid-search-input" placeholder="Enter asteroid name (e.g., Apophis, Bennu)" 
+                           class="flex-1 px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400">
+                    <button id="search-asteroid-btn" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors">
+                        Search
+                    </button>
+                </div>
+
+                <!-- Real-Time Updates Panel -->
+                <div id="real-time-updates" class="mb-4">
+                    <p class="text-gray-400 text-sm">Click "Load Real-Time Data" to see live NASA and partner agency information</p>
+                </div>
+            </div>
+
+            <!-- Educational Content Panel -->
+            <div id="educational-content" class="mt-6">
+                <div class="bg-indigo-900/20 border border-indigo-500/30 rounded-lg p-6">
+                    <h3 class="text-indigo-400 font-bold text-xl mb-4">📚 Educational Resources</h3>
+                    <p class="text-gray-400">Load an asteroid scenario or search the NASA database to see detailed educational content about orbital mechanics, threat assessment, and deflection strategies.</p>
+                </div>
+            </div>
+
+            <!-- Seismic Comparison Panel -->
+            <div id="seismic-comparison" class="mt-6">
+                <div class="bg-gray-900/20 border border-gray-500/30 rounded-lg p-6">
+                    <h3 class="text-gray-400 font-bold text-xl mb-4">📊 Impact Analysis</h3>
+                    <p class="text-gray-400">Calculate an impact to see seismic magnitude comparisons with historical earthquakes.</p>
+                </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div id="results-summary" class="mt-8 p-6 rounded-lg hidden">
+                <h3 class="text-2xl font-bold mb-4">📋 Impact Assessment Summary</h3>
+                <div id="summary-content" class="space-y-4"></div>
+                <div class="mt-6 flex space-x-4">
+                    <button id="download-results" class="btn-primary px-6 py-3 rounded-lg">📥 Download Results</button>
+                    <button id="share-scenario" class="btn-primary px-6 py-3 rounded-lg">📤 Share Scenario</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="card max-w-4xl max-h-5/6 overflow-y-auto p-8 m-4">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-cyan-400">📚 How to Use Meteor Madness</h2>
+                <button id="close-help" class="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            
+            <div class="space-y-6">
+                <section>
+                    <h3 class="text-xl font-bold text-green-400 mb-3">🎯 Getting Started</h3>
+                    <p class="text-gray-300 mb-2">1. Adjust asteroid parameters using the sliders</p>
+                    <p class="text-gray-300 mb-2">2. Click "Calculate Impact" to see the results</p>
+                    <p class="text-gray-300 mb-2">3. Try different deflection strategies</p>
+                    <p class="text-gray-300">4. Explore the 3D visualization and impact maps</p>
+                </section>
+                
+                <section>
+                    <h3 class="text-xl font-bold text-green-400 mb-3">🔬 Understanding the Physics</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><strong>Kinetic Energy:</strong> KE = ½mv² - determines impact severity</li>
+                        <li><strong>Crater Scaling:</strong> Based on empirical formulas from impact studies</li>
+                        <li><strong>Seismic Effects:</strong> Calculated using energy-magnitude relationships</li>
+                        <li><strong>Tsunami Generation:</strong> Depends on impact location and energy</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-xl font-bold text-green-400 mb-3">🛡️ Deflection Methods</h3>
+                    <ul class="space-y-2 text-gray-300">
+                        <li><strong>Kinetic Impactor:</strong> Spacecraft collision to change velocity</li>
+                        <li><strong>Gravity Tractor:</strong> Gravitational pull over time</li>
+                        <li><strong>Laser Ablation:</strong> Vaporizing surface material</li>
+                        <li><strong>Nuclear Deflection:</strong> Nuclear explosion near asteroid</li>
+                    </ul>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/enhanced-nasa-integration.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/meteor-madness.js') }}"></script>
+    
+    <script>
+        // Initialize background animation
+        function createMeteorShower() {
+            const container = document.getElementById('background-meteors');
+            
+            setInterval(() => {
+                const meteor = document.createElement('div');
+                meteor.className = 'meteor';
+                meteor.style.left = Math.random() * window.innerWidth + 'px';
+                meteor.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                meteor.style.animationDelay = Math.random() * 2 + 's';
+                
+                container.appendChild(meteor);
+                
+                setTimeout(() => {
+                    if (meteor.parentNode) {
+                        meteor.parentNode.removeChild(meteor);
+                    }
+                }, 5000);
+            }, 800);
+        }
+        
+        // Initialize app when DOM loads
+        document.addEventListener('DOMContentLoaded', function() {
+            createMeteorShower();
+            
+            // Initialize Meteor Madness app
+            if (typeof MeteorMadness !== 'undefined') {
+                window.meteorApp = new MeteorMadness();
+            }
+        });
+    </script>
+</body>
+</html>

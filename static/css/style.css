@@ -1,0 +1,362 @@
+/* Global Variables */
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #e74c3c;
+  --accent-color: #3498db;
+  --background-dark: #1a1a2e;
+  --background-light: #f5f5f5;
+  --text-light: #ecf0f1;
+  --text-dark: #2c3e50;
+  --success-color: #2ecc71;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --font-main: 'Roboto', Arial, sans-serif;
+  --font-heading: 'Montserrat', sans-serif;
+  --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Roboto:wght@300;400;700&display=swap');
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--background-dark);
+  color: var(--text-light);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header Styles */
+header {
+  background-color: rgba(20, 20, 40, 0.95);
+  padding: 20px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--box-shadow);
+}
+
+header h1 {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  margin-bottom: 5px;
+  text-align: center;
+}
+
+header p {
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+
+nav ul {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+nav a {
+  color: var(--text-light);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 15px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+nav a.active {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+nav a.game-button {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+/* Main Content Styles */
+main {
+  min-height: calc(100vh - 200px);
+  padding: 40px 0;
+}
+
+.view-layer {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.view-layer.active {
+  display: block;
+  opacity: 1;
+}
+
+section .container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 30px;
+}
+
+.controls {
+  background-color: rgba(44, 62, 80, 0.7);
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: var(--box-shadow);
+  height: fit-content;
+}
+
+.controls h2 {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: var(--accent-color);
+}
+
+.control-group {
+  margin-bottom: 20px;
+}
+
+.control-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+select, input[type="range"] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid #34495e;
+  background-color: #34495e;
+  color: var(--text-light);
+}
+
+input[type="range"] {
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #34495e;
+  outline: none;
+  margin-bottom: 10px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.info-text {
+  font-size: 0.9rem;
+  color: #bbb;
+  margin-top: 5px;
+}
+
+.visualization {
+  height: 600px;
+  background-color: #0f0f1a;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Canvas containers */
+#space-canvas-container,
+#atmosphere-canvas-container,
+#game-canvas-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Map container */
+#impact-map-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Consequence charts */
+#consequence-canvas-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 20px;
+  padding: 20px;
+}
+
+.chart-container {
+  background-color: rgba(26, 26, 46, 0.7);
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.chart-container h3 {
+  text-align: center;
+  margin-bottom: 15px;
+  color: var(--accent-color);
+}
+
+.chart {
+  height: calc(100% - 40px);
+}
+
+/* Info Panels */
+.asteroid-info,
+.physics-info,
+.impact-info,
+.consequence-info {
+  background-color: rgba(26, 26, 46, 0.7);
+  padding: 15px;
+  border-radius: 6px;
+  margin-top: 20px;
+}
+
+.asteroid-info h3,
+.physics-info h3,
+.impact-info h3,
+.consequence-info h3 {
+  color: var(--accent-color);
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+/* Game Styles */
+.game-header {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.game-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.game-stats {
+  display: flex;
+  gap: 20px;
+}
+
+.game-container {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 30px;
+}
+
+.mission-controls {
+  background-color: rgba(44, 62, 80, 0.7);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+/* Buttons */
+.primary-button,
+.action-button {
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-button:hover,
+.action-button:hover {
+  background-color: #2980b9;
+}
+
+.action-button {
+  background-color: var(--secondary-color);
+  width: 100%;
+  margin-top: 10px;
+}
+
+.action-button:hover {
+  background-color: #c0392b;
+}
+
+/* Footer */
+footer {
+  background-color: rgba(20, 20, 40, 0.95);
+  padding: 20px 0;
+  text-align: center;
+}
+
+footer p {
+  opacity: 0.7;
+  font-size: 0.9rem;
+}
+
+/* Responsive Styles */
+@media (max-width: 900px) {
+  section .container {
+    grid-template-columns: 1fr;
+  }
+  
+  .game-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .game-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  #consequence-canvas-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .visualization {
+    height: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  nav ul {
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .game-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .game-stats {
+    flex-direction: column;
+  }
+  
+  .visualization {
+    height: 400px;
+  }
+}
