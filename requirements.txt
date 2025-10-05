@@ -1,0 +1,46 @@
+# AstroGuard Professional - Python Dependencies
+# Core Flask Framework
+Flask==2.3.3
+Flask-CORS==4.0.0
+
+# HTTP Requests and API Integration
+requests==2.31.0
+urllib3==2.0.7
+
+# Data Processing and Analysis
+numpy==1.24.3
+pandas==2.0.3
+scipy==1.11.4
+
+# Date and Time Handling
+python-dateutil==2.8.2
+
+# JSON Processing
+jsonschema==4.19.2
+
+# Environment Configuration
+python-dotenv==1.0.0
+
+# Async Processing (for future enhancements)
+asyncio==3.4.3
+
+# Development Dependencies (optional)
+# Uncomment for development environment
+# pytest==7.4.3
+# pytest-flask==1.3.0
+# black==23.9.1
+# flake8==6.1.0
+
+# Production Dependencies (optional)
+# Uncomment for production deployment
+# gunicorn==21.2.0
+# redis==5.0.1
+# celery==5.3.4
+
+# Security (recommended for production)
+# cryptography==41.0.7
+# werkzeug==2.3.7
+
+# Documentation (optional)
+# sphinx==7.2.6
+# sphinx-rtd-theme==1.3.0
